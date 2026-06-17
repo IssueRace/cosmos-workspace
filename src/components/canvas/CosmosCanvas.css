@@ -1,0 +1,117 @@
+.canvas-wrapper {
+  width: 100%;
+  height: 100%;
+  background-color: var(--canvas-bg);
+}
+
+.react-flow {
+  background-color: var(--canvas-bg) !important;
+}
+
+.react-flow__pane {
+  background-color: transparent !important;
+}
+
+.react-flow__edge-path {
+  transition: stroke-width 150ms, filter 150ms, opacity 150ms;
+}
+
+.react-flow__edge.main-edge .react-flow__edge-path {
+  stroke: var(--accent-primary) !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: none !important;
+  opacity: 0.8 !important;
+}
+
+.react-flow__edge.side-edge .react-flow__edge-path {
+  stroke: var(--accent-secondary) !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 5, 5 !important;
+  opacity: 0.6 !important;
+}
+
+.react-flow__edge.file-edge .react-flow__edge-path {
+  stroke: var(--accent-tertiary) !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 4, 4 !important;
+  opacity: 0.7 !important;
+}
+
+.react-flow__edge.main-edge:hover .react-flow__edge-path {
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 6px var(--accent-primary));
+  opacity: 1 !important;
+}
+
+.react-flow__edge.side-edge:hover .react-flow__edge-path {
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 6px var(--accent-secondary));
+  opacity: 1 !important;
+}
+
+.react-flow__edge.file-edge:hover .react-flow__edge-path {
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 6px var(--accent-tertiary));
+  opacity: 1 !important;
+}
+
+.react-flow__minimap {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background: var(--canvas-bg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(255, 255, 255, 0.04) !important;
+  stroke: rgba(255, 255, 255, 0.2) !important;
+  stroke-width: 1px !important;
+}
+
+.react-flow__edge.active-path .react-flow__edge-path {
+  stroke-width: 3.5px !important;
+  opacity: 1 !important;
+}
+
+.react-flow__edge.main-edge.active-path .react-flow__edge-path {
+  stroke: #7DB2FF !important;
+  filter: drop-shadow(0 0 8px rgba(94, 156, 255, 0.9)) !important;
+}
+
+.react-flow__edge.side-edge.active-path .react-flow__edge-path {
+  stroke: #D68DFF !important;
+  filter: drop-shadow(0 0 8px rgba(191, 90, 242, 0.9)) !important;
+}
+
+.react-flow__edge.file-edge.active-path .react-flow__edge-path {
+  stroke: #5BF787 !important;
+  filter: drop-shadow(0 0 8px rgba(48, 209, 88, 0.9)) !important;
+}
+
+/* Macro Zoom line scale down */
+.zoom-macro .react-flow__edge-path {
+  stroke-width: 0.8px !important;
+}
+
+.zoom-macro .react-flow__edge.active-path .react-flow__edge-path {
+  stroke-width: 1.5px !important;
+}
+
+/* Grid lines fade out smoothly on zoom out */
+.zoom-macro .react-flow__background {
+  opacity: 0.25 !important;
+  transition: opacity 250ms ease-in-out;
+}
+
+.zoom-compact .react-flow__background {
+  opacity: 0.65 !important;
+  transition: opacity 250ms ease-in-out;
+}
+
+.zoom-full .react-flow__background {
+  opacity: 1.0 !important;
+  transition: opacity 250ms ease-in-out;
+}

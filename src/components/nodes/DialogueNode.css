@@ -1,0 +1,636 @@
+/* Base wrapper styling */
+.react-flow__node-dialogueNode {
+  min-width: 320px;
+  min-height: 220px;
+}
+
+.zoom-full .react-flow__node-dialogueNode {
+  width: 420px;
+  height: auto;
+}
+
+/* Compact layout wrapper overrides */
+.zoom-compact .react-flow__node-dialogueNode {
+  width: 300px !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.collapse-mode-collapsed .react-flow__node-dialogueNode {
+  width: 300px !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Macro layout wrapper overrides */
+.zoom-macro .react-flow__node-dialogueNode {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.dialogue-node-card {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-primary);
+  backdrop-filter: blur(var(--surface-blur));
+  -webkit-backdrop-filter: blur(var(--surface-blur));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-radius 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: nodeAppear 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes nodeAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.zoom-compact .dialogue-node-card,
+.zoom-macro .dialogue-node-card {
+  resize: none !important;
+}
+
+.dialogue-node-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dialogue-node-card.selected {
+  border-color: rgba(94, 156, 255, 0.4);
+  box-shadow: 0 0 12px rgba(94, 156, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.dialogue-node-card.side-path {
+  border-left: 3px solid var(--accent-secondary);
+}
+
+.dialogue-node-card.running {
+  border-color: var(--accent-primary);
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 4px rgba(94, 156, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4); }
+  50% { box-shadow: 0 0 12px rgba(94, 156, 255, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4); }
+}
+
+.node-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.node-section.user-section {
+  flex-shrink: 0;
+}
+
+.node-section.ai-section {
+  flex: 1;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.identity-icon { color: var(--accent-primary); }
+.identity-icon.ai { color: var(--accent-secondary); }
+
+.node-timestamp {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.node-prompt-body {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.node-separator {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.node-response-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  overflow-y: auto;
+}
+
+.node-response-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.node-response-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.node-response-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.streaming-placeholder {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.node-action-bar {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.node-action-btn {
+  background: var(--surface-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms;
+}
+
+.node-action-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.node-action-btn.danger:hover {
+  color: var(--accent-danger);
+}
+
+.markdown-body pre {
+  background: var(--surface-secondary);
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.markdown-body code {
+  font-size: 13px;
+}
+
+.layout-wrapper {
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.zoom-full .full-layout {
+  opacity: 1;
+  visibility: visible;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: auto;
+}
+
+.zoom-compact .compact-layout {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  overflow: visible;
+  pointer-events: auto;
+}
+
+.zoom-compact .dialogue-node-card {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  gap: 0 !important;
+  resize: none !important;
+}
+
+.compact-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.compact-prompt, .compact-response {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-text {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
+}
+
+.zoom-macro .dialogue-node-card {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6) !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  resize: none !important;
+}
+
+.zoom-macro .dialogue-node-card.main-path {
+  background: var(--accent-primary) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.zoom-macro .dialogue-node-card.side-path {
+  background: var(--accent-secondary) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.zoom-macro .full-layout,
+.zoom-macro .compact-layout {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.node-handle {
+  width: 12px !important;
+  height: 12px !important;
+  border: 2px solid var(--canvas-bg) !important;
+  border-radius: 50% !important;
+  z-index: 20;
+  cursor: crosshair !important;
+  opacity: 0.8 !important;
+  transition: transform 150ms ease, opacity 150ms ease;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  pointer-events: auto !important;
+}
+
+.node-handle.input-handle {
+  background: #ffffff !important;
+  top: -6px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.node-handle.main-handle {
+  background: var(--accent-primary) !important;
+  bottom: -6px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.node-handle.branch-handle {
+  background: var(--accent-secondary) !important;
+  right: -6px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.node-handle:hover,
+.dialogue-node-card:hover .node-handle,
+.dialogue-node-card.selected .node-handle {
+  opacity: 1 !important;
+}
+
+.node-handle:hover {
+  transform: scale(1.4) !important;
+}
+
+.node-handle.input-handle:hover,
+.node-handle.main-handle:hover {
+  transform: translateX(-50%) scale(1.4) !important;
+}
+
+.node-handle.branch-handle:hover {
+  transform: translateY(-50%) scale(1.4) !important;
+}
+
+.dialogue-node-card:hover .node-handle.input-handle,
+.dialogue-node-card:hover .node-handle.main-handle {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.dialogue-node-card:hover .node-handle.branch-handle {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.handle-label {
+  position: absolute;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(12, 12, 14, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.handle-label.input-label {
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.handle-label.main-label {
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.handle-label.branch-label {
+  right: -54px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dialogue-node-card:hover .handle-label,
+.dialogue-node-card.selected .handle-label {
+  opacity: 1;
+}
+
+.zoom-compact .handle-label,
+.zoom-macro .handle-label {
+  display: none !important;
+}
+
+.zoom-macro .node-handle {
+  opacity: 0 !important;
+  width: 4px !important;
+  height: 4px !important;
+  pointer-events: none !important;
+}
+
+/* Draft Mode Styles */
+.node-draft-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.node-draft-textarea {
+  width: 100%;
+  min-height: 100px;
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px;
+  color: var(--text-primary) !important;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.node-draft-textarea:focus {
+  border-color: rgba(94, 156, 255, 0.4) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+.node-draft-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.node-draft-actions .node-action-btn.main-send-btn {
+  background: var(--accent-primary);
+  color: #ffffff;
+}
+
+.node-draft-actions .node-action-btn.main-send-btn:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+
+/* Macro Label Styles */
+.macro-floating-label {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(12, 12, 14, 0.85);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.zoom-macro .dialogue-node-card:hover .macro-floating-label {
+  opacity: 1;
+}
+
+.prompt-expand-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 6px;
+  transition: color 150ms;
+}
+
+.prompt-expand-btn:hover {
+  color: var(--accent-primary-hover);
+  text-decoration: underline;
+}
+
+.promote-btn {
+  color: var(--accent-primary) !important;
+  border-color: rgba(94, 156, 255, 0.2) !important;
+}
+
+.promote-btn:hover {
+  background: rgba(94, 156, 255, 0.1) !important;
+}
+
+/* Global Collapse Mode Overrides */
+.collapse-mode-collapsed .full-layout {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+.collapse-mode-collapsed .compact-layout {
+  opacity: 1 !important;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+.collapse-mode-collapsed .dialogue-node-card {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  resize: none !important;
+  gap: 0 !important;
+}
+
+.collapse-mode-expanded .full-layout {
+  opacity: 1 !important;
+  visibility: visible !important;
+  height: 100% !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+.collapse-mode-expanded .compact-layout,
+.collapse-mode-expanded .macro-layout {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+.collapse-mode-expanded .react-flow__node-dialogueNode {
+  width: 420px !important;
+  height: 220px !important;
+  min-width: 320px !important;
+  min-height: 220px !important;
+}
+
+.collapse-mode-expanded .dialogue-node-card {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 20px !important;
+  border-radius: 16px !important;
+}
+
+/* Custom Resize Handles for easy targeting */
+.react-flow__resize-control {
+  width: 12px !important;
+  height: 12px !important;
+  background: #ffffff !important;
+  border: 2px solid var(--accent-primary) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5) !important;
+  opacity: 0.8 !important;
+  transition: transform 150ms ease, opacity 150ms ease !important;
+}
+
+/* Offset correction for corner handles to align them nicely */
+.react-flow__resize-control.top-left {
+  transform: translate(-30%, -30%) !important;
+}
+.react-flow__resize-control.top-right {
+  transform: translate(30%, -30%) !important;
+}
+.react-flow__resize-control.bottom-left {
+  transform: translate(-30%, 30%) !important;
+}
+.react-flow__resize-control.bottom-right {
+  transform: translate(30%, 30%) !important;
+}
+
+/* Expand hover targets */
+.react-flow__resize-control::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  right: -12px;
+  bottom: -12px;
+  cursor: inherit;
+}
+
+.react-flow__resize-control:hover {
+  opacity: 1 !important;
+}
+.react-flow__resize-control.top-left:hover {
+  transform: translate(-30%, -30%) scale(1.3) !important;
+}
+.react-flow__resize-control.top-right:hover {
+  transform: translate(30%, -30%) scale(1.3) !important;
+}
+.react-flow__resize-control.bottom-left:hover {
+  transform: translate(-30%, 30%) scale(1.3) !important;
+}
+.react-flow__resize-control.bottom-right:hover {
+  transform: translate(30%, 30%) scale(1.3) !important;
+}
+
+/* Resize lines style */
+.react-flow__resize-control.line {
+  border-color: var(--accent-primary) !important;
+  border-width: 1.5px !important;
+  opacity: 0.5 !important;
+}
+.react-flow__resize-control.line:hover {
+  opacity: 1 !important;
+}
+
+

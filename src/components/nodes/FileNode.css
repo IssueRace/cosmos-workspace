@@ -1,0 +1,112 @@
+.file-node-card {
+  width: 220px;
+  background: rgba(30, 41, 59, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.file-node-card:hover {
+  border-color: rgba(94, 156, 255, 0.3);
+}
+
+.file-node-card.selected {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(94, 156, 255, 0.2), 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.file-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.file-info-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.file-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.file-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.file-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 150ms, background-color 150ms;
+}
+
+.file-delete-btn:hover {
+  color: var(--accent-danger);
+  background: rgba(255, 69, 58, 0.1);
+}
+
+.file-preview-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  height: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.file-preview-box code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: inherit;
+}
+
+.file-node-handle {
+  background: var(--accent-primary) !important;
+  width: 8px !important;
+  height: 8px !important;
+  border: 2px solid var(--canvas-bg) !important;
+  right: -4px !important;
+  border-radius: 50% !important;
+}

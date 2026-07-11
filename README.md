@@ -2,24 +2,23 @@
 
 > Every question is a node. Every tangent is a branch. Context is never lost.
 
-I got tired of constantly switching context in standard ChatGPT/Claude linear chats. Whenever I asked a side question, the AI would get derailed or forget the main topic. Starting a new chat meant losing all the previous work and context. 
+Have you ever run into the problem where, while working with AI on a large project, you want to ask a side clarifying question about the project or already completed work, but you don't want to lose the main branch of the dialogue? 
 
-So, I built **Cosmos** — a spatial AI workspace that turns your AI conversations into a visual tree on an infinite 2D canvas. You can branch off any message to explore a tangent without losing your place, and the AI only sees the direct path from root to your current node.
+Standard chat feeds (like ChatGPT or Claude) are strictly linear. Any tangent you take derails the AI's train of thought, and opening a new chat tab forces you to upload your files all over again and re-explain the context. 
+
+**Cosmos** solves this by turning your AI conversations into a visual tree on an infinite 2D canvas. You work within workspaces ("planets") where each turn of prompt and response is a card node:
+- 🌳 **Context Branching**: Spawn side branches from any message to explore alternative paths. The AI context is strictly bounded to the ancestry path from the root node to your current active node, keeping sibling branches completely isolated.
+- 📎 **File Attachments**: Drag and drop source code or documents onto the canvas as separate nodes, then connect them directly to your dialogue tree for targeted context injection.
+- 🔍 **Semantic Zoom (LOD)**: As you zoom out, nodes smoothly transition from full markdown cards to compact summaries, and finally to Obsidian-style colored dots, giving you a macro view of your entire workspace at a glance.
+
+---
 
 ## Features
-- 🌳 **Spatial Dialogue Tree**: Branch conversations on an infinite 2D canvas.
-- 🤖 **Bring Your Own Key**: Select and configure any OpenAI-compatible API base URL and model.
-- 🔍 **Level of Detail (LOD) Zoom**: Cards automatically transition from full text to compact pills and colored dots.
-- 💾 **Local-First & Private**: Your API keys and tree state are stored directly in your browser's localStorage.
-- 🎨 **Apple-inspired Aesthetics**: Fully responsive dark mode with glassmorphism overlays and CSS variable styling.
-- ⌨️ **Keyboard Shortcuts & Search**: Search matching nodes with text highlighting and use global shortcut controls.
-- 📎 **File Attachments**: Drag and drop text files to connect them to any dialogue node for context injection.
-
-## Tech Stack
-- **Framework**: React 18, TypeScript, Vite
-- **Canvas engine**: React Flow (@xyflow/react)
-- **Styling**: Vanilla CSS with custom properties (CSS variables)
-- **Markdown & Code**: react-markdown, rehype-highlight
+- 🌳 **Interactive Canvas**: Drag, select, resize, and connect nodes manually with smart auto-layout repulsion physics.
+- 🤖 **Bring Your Own Key**: Configure any OpenAI-compatible API base URL and select custom models.
+- 💾 **Local-First & Private**: Your API keys, workspace spaces, and dialogue history are saved directly in browser localStorage.
+- 🎨 **Apple-inspired UI**: Minimalist dark mode layout featuring responsive glassmorphism drawer panels.
+- ⌨️ **Keyboard Shortcuts & Search**: Spotlight search with text match highlighting, global keyboard shortcuts, and a floating canvas node statistics panel.
 
 ## License
 Proprietary. All rights reserved. Refer to the `LICENSE` file for details.

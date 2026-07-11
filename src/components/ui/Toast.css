@@ -1,0 +1,131 @@
+/* ── Toast Notification System ── */
+
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 14px 16px;
+  background: rgba(28, 28, 30, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  border-left: 4px solid transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  animation: toast-slide-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.toast-item.toast-exiting {
+  animation: toast-slide-out 0.28s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+/* ── Type border colors ── */
+.toast-item--success {
+  border-left-color: #30D158;
+}
+
+.toast-item--error {
+  border-left-color: #FF453A;
+}
+
+.toast-item--info {
+  border-left-color: #5E9CFF;
+}
+
+.toast-item--warning {
+  border-left-color: #FFD60A;
+}
+
+/* ── Icon ── */
+.toast-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.toast-item--success .toast-icon {
+  color: #30D158;
+}
+
+.toast-item--error .toast-icon {
+  color: #FF453A;
+}
+
+.toast-item--info .toast-icon {
+  color: #5E9CFF;
+}
+
+.toast-item--warning .toast-icon {
+  color: #FFD60A;
+}
+
+/* ── Message ── */
+.toast-message {
+  flex: 1;
+  word-break: break-word;
+}
+
+/* ── Close button ── */
+.toast-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: -2px -4px 0 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.toast-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Animations ── */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}

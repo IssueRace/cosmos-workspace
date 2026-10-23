@@ -25,7 +25,37 @@
   letter-spacing: 0.5px;
 }
 
+.code-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-block-extract-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(94, 156, 255, 0.12);
+  border: 1px solid rgba(94, 156, 255, 0.3);
+  color: #5E9CFF;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 150ms ease;
+}
+
+.code-block-extract-btn:hover {
+  background: rgba(94, 156, 255, 0.25);
+  border-color: rgba(94, 156, 255, 0.5);
+  color: #fff;
+}
+
 .code-block-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: transparent;
   border: none;
   color: var(--text-secondary);

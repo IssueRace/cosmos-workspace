@@ -15,9 +15,11 @@ export interface CosmosNodeData {
   prompt: string;
   response: string;
   timestamp: string;
+  title?: string;
   model?: string;
   isStreaming?: boolean;
   isMainPath: boolean;
+  isMergeNode?: boolean;
   status?: 'success' | 'idle' | 'error' | 'running' | 'draft';
   onBranch?: () => void;
   onDelete?: () => void;
@@ -25,5 +27,18 @@ export interface CosmosNodeData {
   onSubmitPrompt?: (prompt: string, isBranch: boolean) => void;
   onSubmitDraft?: (prompt: string) => void;
   onPromote?: () => void;
+  onResizeStop?: () => void;
+  onSpawnArtifact?: (title: string, language: string, content: string) => void;
   summary?: string;
+}
+
+export interface ArtifactNodeData {
+  title: string;
+  language: string;
+  content: string;
+  parentDialogueId?: string;
+  onUpdateContent?: (newContent: string) => void;
+  onUpdateTitle?: (newTitle: string) => void;
+  onDelete?: () => void;
+  onResizeStop?: () => void;
 }

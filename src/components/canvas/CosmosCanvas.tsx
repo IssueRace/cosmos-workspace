@@ -15,6 +15,7 @@ import '@xyflow/react/dist/style.css';
 import { DialogueNode } from '../nodes/DialogueNode';
 import { CompactNode } from '../nodes/CompactNode';
 import { FileNode } from '../nodes/FileNode';
+import { ArtifactNode } from '../nodes/ArtifactNode';
 import './CosmosCanvas.css';
 
 interface CosmosCanvasProps {
@@ -27,6 +28,7 @@ interface CosmosCanvasProps {
   isMinimapOpen: boolean;
   globalCollapseMode: 'default' | 'collapsed' | 'expanded';
   onNodeDrag: OnNodeDrag;
+  onNodeDragStop?: OnNodeDrag;
 }
 
 export const CosmosCanvas: React.FC<CosmosCanvasProps> = ({
@@ -39,6 +41,7 @@ export const CosmosCanvas: React.FC<CosmosCanvasProps> = ({
   isMinimapOpen,
   globalCollapseMode,
   onNodeDrag,
+  onNodeDragStop,
 }) => {
   const [zoomClass, setZoomClass] = useState('full');
 
@@ -58,6 +61,7 @@ export const CosmosCanvas: React.FC<CosmosCanvasProps> = ({
       dialogueNode: DialogueNode,
       compactNode: CompactNode,
       fileNode: FileNode,
+      artifactNode: ArtifactNode,
     }),
     []
   );
@@ -72,6 +76,7 @@ export const CosmosCanvas: React.FC<CosmosCanvasProps> = ({
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         onNodeDrag={onNodeDrag}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
         minZoom={0.15}
@@ -102,8 +107,9 @@ export const CosmosCanvas: React.FC<CosmosCanvasProps> = ({
           <MiniMap
             bgColor="rgba(12, 12, 14, 0.9)"
             nodeColor={(node) => {
-              if (node.type === 'fileNode') return '#30D158';
-              const data = node.data as { isMainPath?: boolean };
+              if (node.type === 'fileNode' || node.type === 'artifactNode') return '#30D158';
+              const data = node.data as { isMainPath?: boolean; isMergeNode?: boolean };
+              if (data?.isMergeNode) return '#FF9F0A';
               return data?.isMainPath === false ? '#BF5AF2' : '#5E9CFF';
             }}
             maskColor="rgba(255, 255, 255, 0.04)"

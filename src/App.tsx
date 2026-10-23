@@ -32,9 +32,13 @@ function AppContent() {
     onEdgesChange,
     setTreeState,
     addNode,
+    addArtifactNode,
+    updateArtifactNode,
+    addMergeNode,
     updateNodePrompt,
     updateNodeResponse,
     updateNodeSummary,
+    updateNodeTitle,
     promoteBranchToMain,
     deleteBranch,
     applyLayout,
@@ -56,6 +60,54 @@ function AppContent() {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const { showToast } = useToast();
+
+  // Undo/Redo History state
+  const [history, setHistory] = useState<Array<{ nodes: Node[]; edges: Edge[]; activeNodeId: string | null }>>([]);
+  const [redoStack, setRedoStack] = useState<Array<{ nodes: Node[]; edges: Edge[]; activeNodeId: string | null }>>([]);
+
+  const captureHistory = useCallback(() => {
+    setHistory((prev) => {
+      if (prev.length > 0) {
+        const last = prev[prev.length - 1];
+        if (JSON.stringify(last.nodes) === JSON.stringify(nodes) &&
+            JSON.stringify(last.edges) === JSON.stringify(edges) &&
+            last.activeNodeId === activeNodeId) {
+          return prev;
+        }
+      }
+      const next = [...prev, { nodes, edges, activeNodeId }];
+      if (next.length > 50) next.shift();
+      return next;
+    });
+    setRedoStack([]);
+  }, [nodes, edges, activeNodeId]);
+
+  const handleUndo = useCallback(() => {
+    if (history.length <= 1) {
+      showToast('Nothing to undo', 'info', 1000);
+      return;
+    }
+    const current = history[history.length - 1];
+    const prev = history[history.length - 2];
+
+    setHistory((h) => h.slice(0, -1));
+    setRedoStack((r) => [...r, current]);
+    setTreeState(prev.nodes, prev.edges, prev.activeNodeId);
+    showToast('Undo', 'info', 1000);
+  }, [history, setTreeState, showToast]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0) {
+      showToast('Nothing to redo', 'info', 1000);
+      return;
+    }
+    const next = redoStack[redoStack.length - 1];
+
+    setRedoStack((r) => r.slice(0, -1));
+    setHistory((h) => [...h, next]);
+    setTreeState(next.nodes, next.edges, next.activeNodeId);
+    showToast('Redo', 'info', 1000);
+  }, [redoStack, setTreeState, showToast]);
 
   const [spaces, setSpaces] = useState<{ id: string; name: string }[]>(() => {
     const saved = localStorage.getItem('cosmos_spaces_list');
@@ -93,6 +145,7 @@ function AppContent() {
     const savedState = loadSpaceState(activeSpaceId);
     if (savedState) {
       setTreeState(savedState.nodes, savedState.edges, savedState.activeNodeId);
+      setHistory([{ nodes: savedState.nodes, edges: savedState.edges, activeNodeId: savedState.activeNodeId }]);
     } else {
       const rootId = crypto.randomUUID();
       const initialNode: Node = {
@@ -110,8 +163,10 @@ function AppContent() {
         },
       };
       setTreeState([initialNode], [], rootId);
+      setHistory([{ nodes: [initialNode], edges: [], activeNodeId: rootId }]);
     }
-  }, [setTreeState]);
+    setRedoStack([]);
+  }, [setTreeState, activeSpaceId, loadSpaceState]);
 
 
   useEffect(() => {
@@ -134,13 +189,15 @@ function AppContent() {
     'ctrl+f': () => setIsSearchOpen((prev) => !prev),
     'ctrl+/': () => setIsShortcutsHelpOpen((prev) => !prev),
     'ctrl+e': () => handleExport(),
+    'ctrl+z': () => handleUndo(),
+    'ctrl+y': () => handleRedo(),
     'escape': () => {
       setIsSettingsOpen(false);
       setIsSearchOpen(false);
       setFullscreenNodeId(null);
       setIsShortcutsHelpOpen(false);
     },
-  }), [handleExport]));
+  }), [handleExport, handleUndo, handleRedo]));
 
   const handleImport = async (file: File) => {
     try {
@@ -243,9 +300,11 @@ function AppContent() {
     localStorage.setItem('cosmos_spaces_list', JSON.stringify(nextSpaces));
   };
 
-  const generateSummaryForNode = async (nodeId: string, promptText: string, responseText: string) => {
-    const fallbackSummary = `Discussed prompt: "${promptText.slice(0, 40)}..." -> Key outcome: "${responseText.slice(0, 40)}..."`;
+  const generateSummaryAndTitleForNode = async (nodeId: string, promptText: string, responseText: string) => {
+    const fallbackTitle = promptText ? promptText.slice(0, 24) : 'Discussion';
+    const fallbackSummary = `Discussed: "${promptText.slice(0, 40)}..." -> Outcome: "${responseText.slice(0, 40)}..."`;
     if (!settings.apiKey) {
+      updateNodeTitle(nodeId, fallbackTitle);
       updateNodeSummary(nodeId, fallbackSummary);
       return;
     }
@@ -261,33 +320,45 @@ function AppContent() {
           messages: [
             {
               role: 'system',
-              content: 'Summarize the user request and AI reply in 1 concise sentence of under 15 words. Focus on the core technical conclusion.'
+              content: 'Return a JSON object: {"title": "Short 2-4 word Title", "summary": "1 sentence under 15 words"}. Focus on the core topic or solution.'
             },
             {
               role: 'user',
               content: `User: ${promptText}\nAI: ${responseText}`
             }
           ],
-          max_tokens: 40,
+          response_format: { type: 'json_object' },
+          max_tokens: 60,
           temperature: 0.3
         })
       });
       if (res.ok) {
         const json = await res.json();
-        const summary = json.choices?.[0]?.message?.content || fallbackSummary;
-        updateNodeSummary(nodeId, summary.trim());
+        const contentStr = json.choices?.[0]?.message?.content;
+        try {
+          const parsed = JSON.parse(contentStr);
+          if (parsed.title) updateNodeTitle(nodeId, parsed.title.trim());
+          if (parsed.summary) updateNodeSummary(nodeId, parsed.summary.trim());
+        } catch {
+          updateNodeTitle(nodeId, fallbackTitle);
+          updateNodeSummary(nodeId, fallbackSummary);
+        }
       } else {
+        updateNodeTitle(nodeId, fallbackTitle);
         updateNodeSummary(nodeId, fallbackSummary);
       }
     } catch {
+      updateNodeTitle(nodeId, fallbackTitle);
       updateNodeSummary(nodeId, fallbackSummary);
     }
   };
 
   const streamAIResponseForNode = useCallback(async (nodeId: string, prompt: string) => {
-    // Find parent of this node
-    const parentEdge = edges.find(e => e.target === nodeId && nodes.find(n => n.id === e.source)?.type !== 'fileNode');
-    const parentId = parentEdge ? parentEdge.source : null;
+    // Find parents of this node
+    const incomingEdges = edges.filter(
+      e => e.target === nodeId && nodes.find(n => n.id === e.source)?.type === 'dialogueNode'
+    );
+    const parentId = incomingEdges.length > 0 ? incomingEdges[0].source : null;
 
     const pathContext = [
       ...(parentId ? buildContextPath(nodes, edges, parentId) : []),
@@ -307,42 +378,43 @@ function AppContent() {
           updateNodeResponse(nodeId, responseText, true);
         }
       );
-      updateNodeResponse(nodeId, result || responseText, false);
-      generateSummaryForNode(nodeId, prompt, result || responseText);
+      const finalResponse = result || responseText;
+      updateNodeResponse(nodeId, finalResponse, false);
+      generateSummaryAndTitleForNode(nodeId, prompt, finalResponse);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'An error occurred while calling the AI model.';
       updateNodeResponse(nodeId, msg, false);
       showToast('AI request failed', 'error');
     }
-  }, [nodes, edges, settings, updateNodeResponse, streamAIResponse]);
+  }, [nodes, edges, settings, updateNodeResponse, streamAIResponse, updateNodeTitle, updateNodeSummary, showToast]);
 
   const handlePromptFromNode = useCallback(async (parentId: string, prompt: string, isBranch: boolean) => {
     if (isStreaming) return;
 
+    captureHistory();
     const newNodeId = addNode(prompt, parentId, isBranch, settings.model);
     setActiveNodeId(newNodeId);
 
     setTimeout(() => {
-      applyLayout();
       fitView({ nodes: [{ id: newNodeId }, { id: parentId }], duration: 800, padding: 0.2 });
     }, 100);
 
     await streamAIResponseForNode(newNodeId, prompt);
-  }, [isStreaming, addNode, applyLayout, fitView, streamAIResponseForNode, setActiveNodeId]);
+  }, [isStreaming, addNode, fitView, streamAIResponseForNode, setActiveNodeId, captureHistory]);
 
   const handlePromptFromFullscreen = useCallback(async (parentId: string, prompt: string, isBranch: boolean) => {
     if (isStreaming) return;
 
+    captureHistory();
     const newNodeId = addNode(prompt, parentId, isBranch, settings.model);
     setFullscreenNodeId(newNodeId);
 
     setTimeout(() => {
-      applyLayout();
       fitView({ nodes: [{ id: newNodeId }, { id: parentId }], duration: 800, padding: 0.2 });
     }, 100);
 
     await streamAIResponseForNode(newNodeId, prompt);
-  }, [isStreaming, addNode, applyLayout, fitView, streamAIResponseForNode, setFullscreenNodeId]);
+  }, [isStreaming, addNode, fitView, streamAIResponseForNode, setFullscreenNodeId, captureHistory]);
 
   const handleNodeDrag: OnNodeDrag = useCallback((_event, draggedNode) => {
     if (draggedNode.type === 'fileNode') return;
@@ -413,21 +485,19 @@ function AppContent() {
     );
     if (isDuplicate) return;
 
+    captureHistory();
     const sourceNode = nodes.find(n => n.id === connection.source);
-    const isFile = sourceNode?.type === 'fileNode';
+    const isFileOrArtifact = sourceNode?.type === 'fileNode' || sourceNode?.type === 'artifactNode';
     const isBranch = connection.sourceHandle === 'output-branch';
 
     const newEdge = {
       id: `${connection.source}->${connection.target}`,
       source: connection.source,
       target: connection.target,
-      type: isFile ? 'fileEdge' : isBranch ? 'sideEdge' : 'mainEdge',
+      type: isFileOrArtifact ? 'fileEdge' : isBranch ? 'sideEdge' : 'mainEdge',
     };
     setTreeState(nodes, [...edges, newEdge], activeNodeId);
-    if (!isFile) {
-      setTimeout(() => applyLayout(), 50);
-    }
-  }, [nodes, edges, activeNodeId, setTreeState, applyLayout]);
+  }, [nodes, edges, activeNodeId, setTreeState, captureHistory]);
 
   const handleEdgesChange = useCallback((changes: any) => {
     onEdgesChange(changes);
@@ -441,44 +511,86 @@ function AppContent() {
           data: {
             ...node.data,
             onDelete: () => {
+              captureHistory();
               const nextNodes = nodes.filter((n) => n.id !== node.id);
               const nextEdges = edges.filter((e) => e.source !== node.id && e.target !== node.id);
               setTreeState(nextNodes, nextEdges, activeNodeId);
+              showToast('File node deleted', 'info');
             },
           },
         };
       }
+
+      if (node.type === 'artifactNode') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            onUpdateContent: (newContent: string) => {
+              updateArtifactNode(node.id, { content: newContent });
+            },
+            onUpdateTitle: (newTitle: string) => {
+              updateArtifactNode(node.id, { title: newTitle });
+            },
+            onDelete: () => {
+              captureHistory();
+              const nextNodes = nodes.filter((n) => n.id !== node.id);
+              const nextEdges = edges.filter((e) => e.source !== node.id && e.target !== node.id);
+              setTreeState(nextNodes, nextEdges, activeNodeId);
+              showToast('Artifact deleted', 'info');
+            },
+            onResizeStop: () => {
+              captureHistory();
+            },
+          },
+        };
+      }
+
       return {
         ...node,
         type: node.type || 'dialogueNode',
         data: {
           ...node.data,
           onBranch: () => {
+            captureHistory();
             const draftId = addNode('', node.id, true, settings.model);
             setActiveNodeId(draftId);
             setTimeout(() => {
-              applyLayout();
               fitView({ nodes: [{ id: draftId }, { id: node.id }], duration: 800, padding: 0.2 });
             }, 100);
           },
-          onDelete: () => deleteBranch(node.id),
+          onDelete: () => {
+            captureHistory();
+            deleteBranch(node.id);
+            showToast('Branch deleted', 'info');
+          },
           onFullscreen: () => setFullscreenNodeId(node.id),
           onSubmitPrompt: (prompt: string, isBranch: boolean) => {
             handlePromptFromNode(node.id, prompt, isBranch);
           },
           onSubmitDraft: (prompt: string) => {
+            captureHistory();
             updateNodePrompt(node.id, prompt);
             streamAIResponseForNode(node.id, prompt);
-            setTimeout(() => applyLayout(), 50);
           },
           onPromote: () => {
+            captureHistory();
             promoteBranchToMain(node.id);
+            showToast('Branch promoted to main path', 'success');
+          },
+          onSpawnArtifact: (title: string, language: string, content: string) => {
+            captureHistory();
+            addArtifactNode(title, language, content, node.id);
+            showToast(`Artifact "${title}" spawned on canvas`, 'success');
+          },
+          onResizeStop: () => {
+            captureHistory();
           },
           isStreaming: node.data?.isStreaming || false,
         },
       };
     });
-  }, [nodes, edges, activeNodeId, addNode, applyLayout, fitView, deleteBranch, setActiveNodeId, handlePromptFromNode, updateNodePrompt, streamAIResponseForNode, promoteBranchToMain]);
+  }, [nodes, edges, activeNodeId, addNode, addArtifactNode, updateArtifactNode, fitView, deleteBranch, setActiveNodeId, handlePromptFromNode, updateNodePrompt, streamAIResponseForNode, promoteBranchToMain, captureHistory, setTreeState, showToast, settings.model]);
 
   const activeNodeLabel = useMemo(() => {
     if (!activeNodeId) return null;
@@ -608,6 +720,23 @@ function AppContent() {
     }
   }, [nodes, setActiveNodeId, setCenter]);
 
+  const handleSynthesizeBranches = useCallback(() => {
+    const dialogueNodes = nodes.filter(n => n.type === 'dialogueNode' && n.data?.status !== 'draft');
+    if (dialogueNodes.length < 2) {
+      showToast('Need at least 2 dialogue nodes to synthesize', 'warning');
+      return;
+    }
+
+    const sourceSet = new Set(edges.map(e => e.source));
+    const leafNodes = dialogueNodes.filter(n => !sourceSet.has(n.id));
+    const parentCandidates = leafNodes.length >= 2 ? leafNodes.slice(0, 3) : dialogueNodes.slice(-2);
+    const parentIds = parentCandidates.map(n => n.id);
+
+    captureHistory();
+    addMergeNode(parentIds, '', settings.model);
+    showToast(`Created Synthesis Node combining ${parentIds.length} branches`, 'success');
+  }, [nodes, edges, settings.model, addMergeNode, captureHistory, showToast]);
+
   return (
     <div className="app-container" onDragOver={handleDragOver} onDrop={handleDrop} onDragLeave={handleDragLeave}>
       {isDragOver && (
@@ -667,6 +796,7 @@ function AppContent() {
             isMinimapOpen={isMinimapOpen}
             globalCollapseMode={globalCollapseMode}
             onNodeDrag={handleNodeDrag}
+            onNodeDragStop={() => captureHistory()}
           />
           <NodeStats nodes={nodes} edges={edges} />
         </div>
@@ -692,6 +822,12 @@ function AppContent() {
           isMinimapOpen={isMinimapOpen}
           globalCollapseMode={globalCollapseMode}
           onSetCollapseMode={setGlobalCollapseMode}
+          onAutoLayout={() => {
+            captureHistory();
+            applyLayout();
+            showToast('Canvas layout organized', 'success');
+          }}
+          onSynthesizeBranches={handleSynthesizeBranches}
         />
       </div>
       {!isInputBarHidden && (

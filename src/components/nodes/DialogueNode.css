@@ -83,9 +83,35 @@
   border-left: 3px solid var(--accent-secondary);
 }
 
+.dialogue-node-card.merge-node {
+  border-left: 3px solid #FF9F0A;
+  background: rgba(26, 22, 16, 0.75);
+}
+
 .dialogue-node-card.running {
   border-color: var(--accent-primary);
   animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+.merge-icon {
+  color: #FF9F0A !important;
+}
+
+.merge-badge-label {
+  color: #FF9F0A !important;
+  font-weight: 600;
+}
+
+.artifact-spawn-btn {
+  border: 1px solid rgba(48, 209, 88, 0.3) !important;
+  background: rgba(48, 209, 88, 0.1) !important;
+  color: #30D158 !important;
+}
+
+.artifact-spawn-btn:hover {
+  background: rgba(48, 209, 88, 0.25) !important;
+  border-color: rgba(48, 209, 88, 0.6) !important;
+  color: #fff !important;
 }
 
 @keyframes pulseGlow {

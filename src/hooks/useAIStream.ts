@@ -12,7 +12,7 @@ export function useAIStream() {
     onChunk: (chunk: string) => void
   ): Promise<string> => {
     if (!apiKey) {
-      const msg = 'API Key is missing. Please configure it in Settings.';
+      const msg = '⚠️ **API Key is missing**\n\nPlease click the **⚙️ Settings** icon in the top-left toolbar to enter your OpenAI, Groq, or OpenRouter API key.\n\n*Tip: Groq offers free API access with ultra-fast inference if you need a free key!*';
       onChunk(msg);
       return msg;
     }

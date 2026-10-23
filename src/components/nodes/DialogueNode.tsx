@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
-import { User, Sparkles, GitBranch, Copy, Trash2, Maximize2, Send } from 'lucide-react';
+import { User, Sparkles, GitBranch, Copy, Trash2, Maximize2, Send, GitMerge, FileCode } from 'lucide-react';
 import { CosmosNodeData } from '../../types';
 import { MarkdownRenderer } from '../ui/MarkdownRenderer';
 import './DialogueNode.css';
@@ -49,8 +49,35 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
     }
   };
 
+  const handleExtractAllArtifacts = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!nodeData.response || !nodeData.onSpawnArtifact) return;
+    const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+    let match;
+    let count = 0;
+    while ((match = codeBlockRegex.exec(nodeData.response)) !== null) {
+      const lang = match[1] || 'code';
+      const codeContent = match[2].trim();
+      const extMap: Record<string, string> = {
+        javascript: 'js',
+        typescript: 'ts',
+        python: 'py',
+        html: 'html',
+        css: 'css',
+        json: 'json',
+        sql: 'sql',
+        markdown: 'md',
+      };
+      const ext = extMap[lang.toLowerCase()] || lang || 'txt';
+      const title = `${nodeData.title ? nodeData.title.toLowerCase().replace(/\s+/g, '_') : 'snippet'}_${count + 1}.${ext}`;
+      nodeData.onSpawnArtifact(title, lang, codeContent);
+      count++;
+    }
+  };
+
+  const hasCodeBlocks = Boolean(nodeData.response && nodeData.response.includes('```'));
   const lineCount = nodeData.response ? nodeData.response.split('\n').length : 0;
-  const firstLine = nodeData.prompt ? nodeData.prompt.split('\n')[0] : 'Empty prompt';
+  const firstLine = nodeData.title || (nodeData.prompt ? nodeData.prompt.split('\n')[0] : 'Empty prompt');
 
   const shouldTruncatePrompt = nodeData.prompt && nodeData.prompt.length > 150;
   const displayPrompt = shouldTruncatePrompt && !isPromptExpanded
@@ -60,14 +87,19 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
   return (
     <div
       className={`dialogue-node-card ${
-        nodeData.isMainPath ? 'main-path' : 'side-path'
+        nodeData.isMergeNode
+          ? 'merge-node'
+          : nodeData.isMainPath
+          ? 'main-path'
+          : 'side-path'
       } ${selected ? 'selected' : ''} ${nodeData.status || ''}`}
     >
       {selected && nodeData.status !== 'draft' && (
         <NodeResizer
           minWidth={320}
           minHeight={220}
-          color={nodeData.isMainPath ? '#5E9CFF' : '#BF5AF2'}
+          color={nodeData.isMergeNode ? '#FF9F0A' : nodeData.isMainPath ? '#5E9CFF' : '#BF5AF2'}
+          onResizeEnd={nodeData.onResizeStop}
         />
       )}
 
@@ -132,8 +164,17 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
             <div className="node-section user-section">
               <div className="section-header">
                 <div className="header-identity">
-                  <User size={14} className="identity-icon" />
-                  <span>User</span>
+                  {nodeData.isMergeNode ? (
+                    <>
+                      <GitMerge size={14} className="identity-icon merge-icon" />
+                      <span className="merge-badge-label">Synthesis</span>
+                    </>
+                  ) : (
+                    <>
+                      <User size={14} className="identity-icon" />
+                      <span>{nodeData.title || 'User'}</span>
+                    </>
+                  )}
                 </div>
                 <span className="node-timestamp">{nodeData.timestamp}</span>
               </div>
@@ -166,7 +207,10 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
                 {nodeData.isStreaming && !nodeData.response ? (
                   <span className="streaming-placeholder">Thinking...</span>
                 ) : nodeData.response ? (
-                  <MarkdownRenderer content={nodeData.response} />
+                  <MarkdownRenderer
+                    content={nodeData.response}
+                    onExtractArtifact={nodeData.onSpawnArtifact}
+                  />
                 ) : (
                   <span className="streaming-placeholder">Thinking...</span>
                 )}
@@ -190,6 +234,16 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
                 <GitBranch size={14} />
                 <span>Branch</span>
               </button>
+              {hasCodeBlocks && nodeData.onSpawnArtifact && (
+                <button
+                  className="node-action-btn artifact-spawn-btn"
+                  onClick={handleExtractAllArtifacts}
+                  title="Extract Code to Artifact Nodes"
+                >
+                  <FileCode size={14} color="#30D158" />
+                  <span>Artifacts</span>
+                </button>
+              )}
               {!nodeData.isMainPath && nodeData.onPromote && (
                 <button
                   className="node-action-btn promote-btn"
@@ -225,7 +279,11 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
       <div className="layout-wrapper compact-layout">
         <div className="compact-container">
           <div className="compact-prompt">
-            <User size={12} className="identity-icon" />
+            {nodeData.isMergeNode ? (
+              <GitMerge size={12} className="identity-icon merge-icon" />
+            ) : (
+              <User size={12} className="identity-icon" />
+            )}
             <span className="compact-text">{firstLine}</span>
           </div>
           <div className="compact-response">
@@ -236,7 +294,7 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
       </div>
 
       <div className="layout-wrapper macro-layout">
-        <span className="macro-floating-label">{firstLine.slice(0, 15)}...</span>
+        <span className="macro-floating-label">{firstLine.slice(0, 18)}...</span>
       </div>
     </div>
   );

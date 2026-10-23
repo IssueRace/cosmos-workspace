@@ -56,8 +56,31 @@ export function useConversationTree() {
         }
 
         setNodes((prevNodes) => {
-          const nextNodes = [...prevNodes, newNode];
-          return calculateTreeLayout(nextNodes, nextEdges);
+          const parentNode = parentId ? prevNodes.find((n) => n.id === parentId) : null;
+          let posX = 100;
+          let posY = 100;
+
+          if (parentNode) {
+            const parentX = parentNode.position.x;
+            const parentY = parentNode.position.y;
+            const parentW = parentNode.measured?.width || 320;
+            const parentH = parentNode.measured?.height || 220;
+
+            if (isBranch) {
+              posX = parentX + parentW + 80;
+              posY = parentY;
+            } else {
+              posX = parentX;
+              posY = parentY + parentH + 80;
+            }
+          }
+
+          const positionedNode = {
+            ...newNode,
+            position: { x: posX, y: posY }
+          };
+
+          return [...prevNodes, positionedNode];
         });
 
         return nextEdges;
@@ -132,6 +155,147 @@ export function useConversationTree() {
     []
   );
 
+  const updateNodeTitle = useCallback(
+    (nodeId: string, title: string) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                title,
+              },
+            };
+          }
+          return node;
+        })
+      );
+    },
+    []
+  );
+
+  const addArtifactNode = useCallback(
+    (title: string, language: string, content: string, parentDialogueId?: string) => {
+      const artifactId = crypto.randomUUID();
+
+      setNodes((prevNodes) => {
+        const parentNode = parentDialogueId ? prevNodes.find((n) => n.id === parentDialogueId) : null;
+        let posX = 200;
+        let posY = 200;
+
+        if (parentNode) {
+          const parentW = parentNode.measured?.width || 420;
+          posX = parentNode.position.x + parentW + 60;
+          posY = parentNode.position.y;
+        }
+
+        const newArtifactNode: Node = {
+          id: artifactId,
+          type: 'artifactNode',
+          position: { x: posX, y: posY },
+          data: {
+            title,
+            language,
+            content,
+            parentDialogueId,
+          },
+        };
+
+        return [...prevNodes, newArtifactNode];
+      });
+
+      if (parentDialogueId) {
+        setEdges((prevEdges) => [
+          ...prevEdges,
+          {
+            id: `${parentDialogueId}->${artifactId}`,
+            source: parentDialogueId,
+            target: artifactId,
+            type: 'sideEdge',
+          },
+        ]);
+      }
+
+      return artifactId;
+    },
+    []
+  );
+
+  const updateArtifactNode = useCallback(
+    (nodeId: string, updates: { content?: string; title?: string }) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...updates,
+              },
+            };
+          }
+          return node;
+        })
+      );
+    },
+    []
+  );
+
+  const addMergeNode = useCallback(
+    (parentIds: string[], prompt: string = '', model?: string) => {
+      const mergeId = crypto.randomUUID();
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      setNodes((prevNodes) => {
+        const parents = prevNodes.filter((n) => parentIds.includes(n.id));
+        let avgX = 200;
+        let maxY = 200;
+
+        if (parents.length > 0) {
+          avgX = parents.reduce((sum, p) => sum + p.position.x, 0) / parents.length;
+          maxY = Math.max(...parents.map((p) => p.position.y + (p.measured?.height || 220)));
+        }
+
+        const newMergeNode: Node = {
+          id: mergeId,
+          type: 'dialogueNode',
+          position: { x: avgX, y: maxY + 100 },
+          data: {
+            prompt,
+            response: '',
+            timestamp,
+            title: 'Synthesis Branch',
+            isMainPath: false,
+            isMergeNode: true,
+            model: model || 'gpt-4o-mini',
+            isStreaming: false,
+            status: prompt ? 'success' : 'draft',
+          },
+        };
+
+        return [...prevNodes, newMergeNode];
+      });
+
+      setEdges((prevEdges) => {
+        const newEdges = [...prevEdges];
+        parentIds.forEach((parentId) => {
+          newEdges.push({
+            id: `${parentId}->${mergeId}`,
+            source: parentId,
+            target: mergeId,
+            type: 'sideEdge',
+          });
+        });
+        return newEdges;
+      });
+
+      setActiveNodeId(mergeId);
+      return mergeId;
+    },
+    []
+  );
+
   const deleteBranch = useCallback(
     (nodeId: string) => {
       setEdges((prevEdges) => {
@@ -154,7 +318,7 @@ export function useConversationTree() {
 
         setNodes((prevNodes) => {
           const nextNodes = prevNodes.filter((node) => !descendants.has(node.id));
-          return calculateTreeLayout(nextNodes, nextEdges);
+          return nextNodes;
         });
 
         if (activeNodeId && descendants.has(activeNodeId)) {
@@ -222,9 +386,13 @@ export function useConversationTree() {
     onEdgesChange,
     setTreeState,
     addNode,
+    addArtifactNode,
+    updateArtifactNode,
+    addMergeNode,
     updateNodePrompt,
     updateNodeResponse,
     updateNodeSummary,
+    updateNodeTitle,
     promoteBranchToMain,
     deleteBranch,
     applyLayout,

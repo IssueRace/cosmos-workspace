@@ -11,6 +11,8 @@ const shortcuts = [
   { keys: ['Ctrl', '/'], description: 'Show / hide this help' },
   { keys: ['Ctrl', 'F'], description: 'Search nodes' },
   { keys: ['Ctrl', 'E'], description: 'Export session' },
+  { keys: ['Ctrl', 'Z'], description: 'Undo last action' },
+  { keys: ['Ctrl', 'Y'], description: 'Redo last action' },
   { keys: ['Escape'], description: 'Close any open panel' },
   { keys: ['Delete'], description: 'Delete selected edge' },
   { keys: ['Backspace'], description: 'Delete selected edge' },

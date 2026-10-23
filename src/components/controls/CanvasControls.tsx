@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Minus, Maximize2, Map, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Minus, Maximize2, Map, ChevronDown, ChevronUp, Wand2, GitMerge } from 'lucide-react';
 import { GlassPanel } from '../ui/GlassPanel';
 import './CanvasControls.css';
 
@@ -11,6 +11,8 @@ interface CanvasControlsProps {
   isMinimapOpen: boolean;
   globalCollapseMode: 'default' | 'collapsed' | 'expanded';
   onSetCollapseMode: (mode: 'default' | 'collapsed' | 'expanded') => void;
+  onAutoLayout: () => void;
+  onSynthesizeBranches?: () => void;
 }
 
 export const CanvasControls: React.FC<CanvasControlsProps> = ({
@@ -21,6 +23,8 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
   isMinimapOpen,
   globalCollapseMode,
   onSetCollapseMode,
+  onAutoLayout,
+  onSynthesizeBranches,
 }) => {
   return (
     <GlassPanel className="canvas-controls">
@@ -40,6 +44,18 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
       >
         <Map size={16} />
       </button>
+      <button className="control-btn" onClick={onAutoLayout} title="Auto Layout (Tidy Up)">
+        <Wand2 size={16} />
+      </button>
+      {onSynthesizeBranches && (
+        <button
+          className="control-btn"
+          onClick={onSynthesizeBranches}
+          title="Synthesize / Merge Branches"
+        >
+          <GitMerge size={16} color="#FF9F0A" />
+        </button>
+      )}
       <div className="control-divider" style={{ width: '24px', height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px auto' }} />
       <button
         className={`control-btn ${globalCollapseMode === 'collapsed' ? 'active' : ''}`}
@@ -58,3 +74,4 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
     </GlassPanel>
   );
 };
+

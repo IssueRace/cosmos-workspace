@@ -11,6 +11,7 @@ export const NodeStats: React.FC<NodeStatsProps> = ({ nodes, edges }) => {
   const stats = useMemo(() => {
     const dialogueNodes = nodes.filter(n => n.type === 'dialogueNode');
     const fileNodes = nodes.filter(n => n.type === 'fileNode');
+    const artifactNodes = nodes.filter(n => n.type === 'artifactNode');
 
     // Calculate tree depth by walking from roots
     const childMap = new Map<string, string[]>();
@@ -39,11 +40,12 @@ export const NodeStats: React.FC<NodeStatsProps> = ({ nodes, edges }) => {
     return {
       dialogueCount: dialogueNodes.length,
       fileCount: fileNodes.length,
+      artifactCount: artifactNodes.length,
       depth: maxDepth,
     };
   }, [nodes, edges]);
 
-  if (stats.dialogueCount === 0) return null;
+  if (stats.dialogueCount === 0 && stats.artifactCount === 0) return null;
 
   return (
     <div className="node-stats">
@@ -52,6 +54,12 @@ export const NodeStats: React.FC<NodeStatsProps> = ({ nodes, edges }) => {
         <>
           <span className="node-stats-dot">·</span>
           <span>{stats.fileCount} file{stats.fileCount !== 1 ? 's' : ''}</span>
+        </>
+      )}
+      {stats.artifactCount > 0 && (
+        <>
+          <span className="node-stats-dot">·</span>
+          <span>{stats.artifactCount} artifact{stats.artifactCount !== 1 ? 's' : ''}</span>
         </>
       )}
       <span className="node-stats-dot">·</span>

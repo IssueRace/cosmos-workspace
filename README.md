@@ -74,6 +74,16 @@ Or connect the repository on [Vercel Dashboard](https://vercel.com):
 
 ---
 
+## 🧭 Inspiration & Prior Art
+
+Branching and canvas-based AI interfaces are not a new idea. Tools like Obsidian Canvas, Flowith and various "tree of chats" experiments explored the space as early as 2022. Cosmos is a personal take on it, built to learn and to scratch my own itch. What it focuses on:
+- **Strict path-bounded context**: a branch only ever sees its ancestry, never its siblings.
+- **Artifacts as first-class nodes**: code from AI replies becomes editable, downloadable, connectable cards.
+- **Branch synthesis**: parallel explorations can be merged into one node that the AI summarizes into a single answer.
+- **Local-first**: no backend, no accounts, your key stays in your browser.
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology |

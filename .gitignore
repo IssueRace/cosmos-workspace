@@ -31,3 +31,5 @@ backup/
 generate_git_history.py
 git_schedule.json
 discussion about idea.txt
+
+.vercel

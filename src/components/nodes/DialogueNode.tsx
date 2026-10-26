@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
-import { User, Sparkles, GitBranch, Copy, Trash2, Maximize2, Send, GitMerge, FileCode } from 'lucide-react';
+import { User, Sparkles, GitBranch, Copy, Trash2, Maximize2, Send, GitMerge, FileCode, Plus } from 'lucide-react';
 import { CosmosNodeData } from '../../types';
 import { MarkdownRenderer } from '../ui/MarkdownRenderer';
 import './DialogueNode.css';
@@ -22,9 +22,16 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
     }
   };
 
+  const handleContinue = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (nodeData.onContinue) {
+      nodeData.onContinue();
+    }
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (nodeData.onDelete && confirm('Delete this branch and all its children?')) {
+    if (nodeData.onDelete && confirm('Delete this node and its branch children?')) {
       nodeData.onDelete();
     }
   };
@@ -77,7 +84,7 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
 
   const hasCodeBlocks = Boolean(nodeData.response && nodeData.response.includes('```'));
   const lineCount = nodeData.response ? nodeData.response.split('\n').length : 0;
-  const firstLine = nodeData.title || (nodeData.prompt ? nodeData.prompt.split('\n')[0] : 'Empty prompt');
+  const firstLine = nodeData.title || (nodeData.prompt ? nodeData.prompt.split('\n')[0] : 'New Prompt');
 
   const shouldTruncatePrompt = nodeData.prompt && nodeData.prompt.length > 150;
   const displayPrompt = shouldTruncatePrompt && !isPromptExpanded
@@ -218,21 +225,31 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
             </div>
 
             <div className="node-action-bar">
-              <button
-                className="node-action-btn"
-                onClick={handleFullscreen}
-                title="Fullscreen Chat Mode"
-              >
-                <Maximize2 size={14} />
-                <span>Fullscreen</span>
-              </button>
+              {nodeData.onContinue && (
+                <button
+                  className="node-action-btn"
+                  onClick={handleContinue}
+                  title="Continue Main Thread"
+                >
+                  <Plus size={14} />
+                  <span>Continue</span>
+                </button>
+              )}
               <button
                 className="node-action-btn"
                 onClick={handleBranch}
-                title="Branch Off"
+                title="Branch Off Side Question"
               >
                 <GitBranch size={14} />
                 <span>Branch</span>
+              </button>
+              <button
+                className="node-action-btn"
+                onClick={handleFullscreen}
+                title="Open Split Chat View"
+              >
+                <Maximize2 size={14} />
+                <span>Chat</span>
               </button>
               {hasCodeBlocks && nodeData.onSpawnArtifact && (
                 <button
@@ -280,21 +297,27 @@ export const DialogueNode: React.FC<NodeProps> = ({ data, selected }) => {
         <div className="compact-container">
           <div className="compact-prompt">
             {nodeData.isMergeNode ? (
-              <GitMerge size={12} className="identity-icon merge-icon" />
+              <GitMerge size={13} className="identity-icon merge-icon" />
             ) : (
-              <User size={12} className="identity-icon" />
+              <User size={13} className="identity-icon" />
             )}
             <span className="compact-text">{firstLine}</span>
           </div>
           <div className="compact-response">
-            <Sparkles size={12} className="identity-icon ai" />
+            <Sparkles size={13} className="identity-icon ai" />
             <span className="compact-text">{lineCount} lines</span>
           </div>
         </div>
       </div>
 
       <div className="layout-wrapper macro-layout">
-        <span className="macro-floating-label">{firstLine.slice(0, 18)}...</span>
+        <div
+          className={`macro-dot ${
+            nodeData.isMergeNode ? 'merge' : nodeData.isMainPath ? 'main' : 'side'
+          }`}
+        >
+          <span className="macro-floating-label">{firstLine.slice(0, 24)}</span>
+        </div>
       </div>
     </div>
   );

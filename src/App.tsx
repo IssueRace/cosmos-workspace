@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Node, Edge, ReactFlowProvider, useReactFlow, OnNodeDrag } from '@xyflow/react';
-import { Settings, Paperclip, Search, Keyboard } from 'lucide-react';
+import { Settings, Paperclip, Search, Keyboard, PlusCircle, Palette, Sparkles } from 'lucide-react';
 import { CosmosCanvas } from './components/canvas/CosmosCanvas';
+import { DrawingLayer } from './components/canvas/DrawingLayer';
 import { CanvasControls } from './components/controls/CanvasControls';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { FullscreenChat } from './components/fullscreen/FullscreenChat';
@@ -18,7 +19,7 @@ import { useAIStream } from './hooks/useAIStream';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { buildContextPath } from './utils/buildContextPath';
 import { DEFAULT_SETTINGS } from './utils/constants';
-import { AppSettings } from './types';
+import { AppSettings, CanvasAnnotation } from './types';
 import './App.css';
 
 function AppContent() {
@@ -58,6 +59,8 @@ function AppContent() {
   const [isInputBarHidden, setIsInputBarHidden] = useState(false);
   const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isPaintModeOpen, setIsPaintModeOpen] = useState(false);
+  const [annotations, setAnnotations] = useState<CanvasAnnotation[]>([]);
 
   const { showToast } = useToast();
 
@@ -165,8 +168,27 @@ function AppContent() {
       setTreeState([initialNode], [], rootId);
       setHistory([{ nodes: [initialNode], edges: [], activeNodeId: rootId }]);
     }
+    const savedAnnotations = localStorage.getItem(`cosmos-space-annotations-${activeSpaceId}`);
+    if (savedAnnotations) {
+      try { setAnnotations(JSON.parse(savedAnnotations)); } catch { setAnnotations([]); }
+    } else {
+      setAnnotations([]);
+    }
     setRedoStack([]);
   }, [setTreeState, activeSpaceId, loadSpaceState]);
+
+  useEffect(() => {
+    localStorage.setItem(`cosmos-space-annotations-${activeSpaceId}`, JSON.stringify(annotations));
+  }, [annotations, activeSpaceId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (nodes.length > 0) {
+        fitView({ padding: 0.25, duration: 350 });
+      }
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [fullscreenNodeId, fitView]);
 
 
   useEffect(() => {
@@ -388,6 +410,36 @@ function AppContent() {
     }
   }, [nodes, edges, settings, updateNodeResponse, streamAIResponse, updateNodeTitle, updateNodeSummary, showToast]);
 
+  const handleCreateRootNode = useCallback((initialPrompt?: string) => {
+    captureHistory();
+    const rootId = crypto.randomUUID();
+    const existingDialogueCount = nodes.filter((n) => n.type === 'dialogueNode').length;
+    const isDraft = !initialPrompt;
+    const newNode: Node = {
+      id: rootId,
+      type: 'dialogueNode',
+      position: { x: 120 + existingDialogueCount * 48, y: 120 + existingDialogueCount * 36 },
+      data: {
+        prompt: initialPrompt || '',
+        response: '',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: isDraft ? 'draft' : 'running',
+        model: settings.model,
+        isMainPath: true,
+        isStreaming: !isDraft,
+      },
+    };
+    const nextNodes = [...nodes, newNode];
+    setTreeState(nextNodes, edges, rootId);
+    setTimeout(() => {
+      fitView({ nodes: [{ id: rootId }], duration: 600, padding: 0.3 });
+    }, 80);
+
+    if (initialPrompt) {
+      streamAIResponseForNode(rootId, initialPrompt);
+    }
+  }, [nodes, edges, settings.model, captureHistory, setTreeState, fitView, streamAIResponseForNode]);
+
   const handlePromptFromNode = useCallback(async (parentId: string, prompt: string, isBranch: boolean) => {
     if (isStreaming) return;
 
@@ -559,8 +611,19 @@ function AppContent() {
               fitView({ nodes: [{ id: draftId }, { id: node.id }], duration: 800, padding: 0.2 });
             }, 100);
           },
+          onContinue: () => {
+            captureHistory();
+            const draftId = addNode('', node.id, false, settings.model);
+            setActiveNodeId(draftId);
+            setTimeout(() => {
+              fitView({ nodes: [{ id: draftId }, { id: node.id }], duration: 800, padding: 0.2 });
+            }, 100);
+          },
           onDelete: () => {
             captureHistory();
+            if (fullscreenNodeId === node.id) {
+              setFullscreenNodeId(null);
+            }
             deleteBranch(node.id);
             showToast('Branch deleted', 'info');
           },
@@ -749,8 +812,22 @@ function AppContent() {
       )}
       <div className="top-left-actions">
         <GlassPanel className="icon-button-panel">
-          <button className="settings-trigger-btn" onClick={() => setIsSettingsOpen(true)} title="Settings">
+          <button className="settings-trigger-btn" onClick={() => setIsSettingsOpen(true)} title="Settings & API Key">
             <Settings size={18} />
+          </button>
+          <button
+            className="file-upload-trigger-btn"
+            onClick={() => handleCreateRootNode()}
+            title="New Root Node"
+          >
+            <PlusCircle size={18} />
+          </button>
+          <button
+            className={`file-upload-trigger-btn ${isPaintModeOpen ? 'active-tool-icon' : ''}`}
+            onClick={() => setIsPaintModeOpen((v) => !v)}
+            title="Paint & Canvas Annotations"
+          >
+            <Palette size={18} />
           </button>
           <button className="file-upload-trigger-btn" onClick={() => fileInputRef.current?.click()} title="Upload File">
             <Paperclip size={18} />
@@ -798,6 +875,42 @@ function AppContent() {
             onNodeDrag={handleNodeDrag}
             onNodeDragStop={() => captureHistory()}
           />
+          <DrawingLayer
+            isOpen={isPaintModeOpen}
+            onClose={() => setIsPaintModeOpen(false)}
+            annotations={annotations}
+            onChange={setAnnotations}
+          />
+          {nodes.filter((n) => n.type !== 'fileNode' && n.type !== 'artifactNode').length === 0 && (
+            <div className="empty-canvas-overlay">
+              <div className="empty-canvas-card">
+                <Sparkles size={28} className="empty-canvas-icon" />
+                <h3>Workspace Canvas is Empty</h3>
+                <p>Create a new root node or type a prompt in the bottom input bar to begin a spatial conversation.</p>
+                <button className="create-first-node-btn" onClick={() => handleCreateRootNode()}>
+                  <PlusCircle size={16} />
+                  <span>Create First Node</span>
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="controls-container">
+            <CanvasControls
+              onZoomIn={() => zoomIn()}
+              onZoomOut={() => zoomOut()}
+              onFitView={() => fitView({ padding: 0.25, duration: 400 })}
+              onToggleMinimap={() => setIsMinimapOpen(!isMinimapOpen)}
+              isMinimapOpen={isMinimapOpen}
+              globalCollapseMode={globalCollapseMode}
+              onSetCollapseMode={setGlobalCollapseMode}
+              onAutoLayout={() => {
+                captureHistory();
+                applyLayout();
+                showToast('Canvas layout organized', 'success');
+              }}
+              onSynthesizeBranches={handleSynthesizeBranches}
+            />
+          </div>
           <NodeStats nodes={nodes} edges={edges} />
         </div>
 
@@ -810,26 +923,15 @@ function AppContent() {
           isStreaming={isStreaming}
           onSubmit={handlePromptFromFullscreen}
           onNavigateToNode={(nodeId) => setFullscreenNodeId(nodeId)}
+          onCenterCanvas={() => fitView({ padding: 0.25, duration: 400 })}
+          onSpawnArtifact={(nodeId, title, language, content) => {
+            captureHistory();
+            addArtifactNode(title, language, content, nodeId);
+            showToast(`Artifact "${title}" spawned on canvas`, 'success');
+          }}
         />
       </div>
 
-      <div className="controls-container">
-        <CanvasControls
-          onZoomIn={() => zoomIn()}
-          onZoomOut={() => zoomOut()}
-          onFitView={() => fitView()}
-          onToggleMinimap={() => setIsMinimapOpen(!isMinimapOpen)}
-          isMinimapOpen={isMinimapOpen}
-          globalCollapseMode={globalCollapseMode}
-          onSetCollapseMode={setGlobalCollapseMode}
-          onAutoLayout={() => {
-            captureHistory();
-            applyLayout();
-            showToast('Canvas layout organized', 'success');
-          }}
-          onSynthesizeBranches={handleSynthesizeBranches}
-        />
-      </div>
       {!isInputBarHidden && (
         <InputBar
           activeNodeLabel={activeNodeLabel}
@@ -840,12 +942,15 @@ function AppContent() {
             setIsBranchMode(false);
           }}
           onSubmit={(prompt, isBranch) => {
-            if (activeNodeId) {
-              handlePromptFromNode(activeNodeId, prompt, isBranch);
+            const validActive = activeNodeId ? nodes.find((n) => n.id === activeNodeId && n.type === 'dialogueNode') : null;
+            if (validActive) {
+              handlePromptFromNode(validActive.id, prompt, isBranch);
             } else {
-              const rootNode = nodes.find((n) => n.type !== 'fileNode');
+              const rootNode = nodes.find((n) => n.type === 'dialogueNode');
               if (rootNode) {
                 handlePromptFromNode(rootNode.id, prompt, isBranch);
+              } else {
+                handleCreateRootNode(prompt);
               }
             }
           }}

@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { X, Settings as SettingsIcon, Download, Upload, Trash2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { X, Settings as SettingsIcon, Download, Upload, Trash2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { GlassPanel } from '../ui/GlassPanel';
 import { AppSettings } from '../../types';
 import './SettingsPanel.css';
@@ -24,6 +24,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onClearCanvas,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showKey, setShowKey] = useState(false);
 
   if (!isOpen) {
     return null;
@@ -31,6 +32,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSettingsChange({ ...settings, apiKey: e.target.value });
+  };
+
+  const handleClearApiKey = () => {
+    onSettingsChange({ ...settings, apiKey: '' });
+  };
+
+  const applyPreset = (baseUrl: string, model: string) => {
+    onSettingsChange({ ...settings, apiBaseUrl: baseUrl, model });
   };
 
   const handleApiBaseUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +66,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
-  const isCustom = settings.model !== 'gpt-4o' && settings.model !== 'gpt-4o-mini';
+  const isCustom =
+    settings.model !== 'gpt-4o' &&
+    settings.model !== 'gpt-4o-mini' &&
+    settings.model !== 'llama-3.3-70b-versatile';
 
   return (
     <div className="settings-overlay" onClick={onClose}>
@@ -73,15 +85,71 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         <div className="settings-body">
+          <div className="security-trust-card">
+            <div className="security-trust-header">
+              <ShieldCheck size={16} className="security-shield-icon" />
+              <span>100% Client-Side Key Storage (BYOK)</span>
+            </div>
+            <p className="security-trust-text">
+              Your API key is saved exclusively in your browser's local storage and sent directly from your device to the provider. Cosmos has no backend server. Leave empty to use built-in <strong>Interactive Demo Mode</strong>.
+            </p>
+          </div>
+
           <div className="settings-group">
-            <label className="settings-label">API Key</label>
-            <input
-              type="password"
-              className="settings-input"
-              value={settings.apiKey}
-              onChange={handleApiKeyChange}
-              placeholder="Enter OpenAI-compatible API key"
-            />
+            <div className="settings-label-row">
+              <label className="settings-label">API Key</label>
+              {settings.apiKey ? (
+                <button className="clear-key-link" onClick={handleClearApiKey} title="Remove key from browser">
+                  Forget Key
+                </button>
+              ) : (
+                <span className="demo-mode-pill">Demo Mode Active</span>
+              )}
+            </div>
+            <div className="api-key-input-wrapper">
+              <input
+                type={showKey ? 'text' : 'password'}
+                className="settings-input api-key-input"
+                value={settings.apiKey}
+                onChange={handleApiKeyChange}
+                placeholder="sk-... or gsk_... (leave empty for Demo Mode)"
+              />
+              <button
+                type="button"
+                className="toggle-key-visibility"
+                onClick={() => setShowKey((v) => !v)}
+                title={showKey ? 'Hide API Key' : 'Show API Key'}
+              >
+                {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-group">
+            <label className="settings-label">Quick Provider Presets</label>
+            <div className="provider-presets-row">
+              <button
+                type="button"
+                className="preset-chip"
+                onClick={() => applyPreset('https://api.openai.com/v1', 'gpt-4o-mini')}
+              >
+                OpenAI
+              </button>
+              <button
+                type="button"
+                className="preset-chip"
+                onClick={() => applyPreset('https://api.groq.com/openai/v1', 'llama-3.3-70b-versatile')}
+              >
+                Groq (Free)
+              </button>
+              <button
+                type="button"
+                className="preset-chip"
+                onClick={() => applyPreset('http://localhost:11434/v1', 'llama3.2')}
+              >
+                Ollama (Local)
+              </button>
+            </div>
           </div>
 
           <div className="settings-group">
@@ -104,6 +172,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             >
               <option value="gpt-4o">gpt-4o</option>
               <option value="gpt-4o-mini">gpt-4o-mini</option>
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Groq)</option>
               <option value="custom">Custom Model...</option>
             </select>
             {isCustom && (

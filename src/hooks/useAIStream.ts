@@ -12,9 +12,19 @@ export function useAIStream() {
     onChunk: (chunk: string) => void
   ): Promise<string> => {
     if (!apiKey) {
-      const msg = '⚠️ **API Key is missing**\n\nPlease click the **⚙️ Settings** icon in the top-left toolbar to enter your OpenAI, Groq, or OpenRouter API key.\n\n*Tip: Groq offers free API access with ultra-fast inference if you need a free key!*';
-      onChunk(msg);
-      return msg;
+      setIsStreaming(true);
+      const lastUserPrompt = [...messages].reverse().find((m) => m.role === 'user')?.content || 'your prompt';
+      const demoResponse = `### ✨ Cosmos Interactive Demo Mode\n\nYou asked: **"${lastUserPrompt.slice(0, 100)}"**\n\nBecause no API key is configured in **⚙️ Settings**, Cosmos is running in **Interactive Demo Mode** (100% browser-local).\n\n- **Branch & Merge**: Click **Branch** on any node or select 2+ nodes (` + '`Shift + Click`' + `) to synthesize threads.\n- **Extract Code Artifacts**: Click **Extract to Canvas** on the code block below to spawn a live Artifact Node:\n\n\`\`\`typescript\nexport function exploreCosmos(topic: string) {\n  const branches = ['Architecture', 'Edge Cases', 'Synthesis'];\n  return branches.map((stage, idx) => ({\n    step: idx + 1,\n    query: \`\${topic} -> \${stage}\`,\n    spatialStatus: 'active'\n  }));\n}\n\`\`\`\n\n*To connect a live LLM (OpenAI, Groq Free Tier, or local Ollama), open **⚙️ Settings** in the top-left bar. Your key stays strictly in your browser's \`localStorage\`.*`;
+
+      let accumulated = '';
+      const words = demoResponse.split(/(?=[ \n])/);
+      for (const word of words) {
+        await new Promise((r) => setTimeout(r, 14));
+        accumulated += word;
+        onChunk(word);
+      }
+      setIsStreaming(false);
+      return accumulated;
     }
 
     setIsStreaming(true);

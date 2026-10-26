@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Node, Edge } from '@xyflow/react';
-import { X, Send, GitBranch, ArrowLeft, User, Sparkles } from 'lucide-react';
+import { X, Send, GitBranch, ArrowLeft, User, Sparkles, LocateFixed } from 'lucide-react';
 import { MarkdownRenderer } from '../ui/MarkdownRenderer';
 import './FullscreenChat.css';
 
@@ -13,6 +13,8 @@ interface FullscreenChatProps {
   isStreaming: boolean;
   onSubmit: (parentId: string, prompt: string, isBranch: boolean) => void;
   onNavigateToNode: (nodeId: string) => void;
+  onCenterCanvas?: () => void;
+  onSpawnArtifact?: (nodeId: string, title: string, language: string, content: string) => void;
 }
 
 export const FullscreenChat: React.FC<FullscreenChatProps> = ({
@@ -24,10 +26,41 @@ export const FullscreenChat: React.FC<FullscreenChatProps> = ({
   isStreaming,
   onSubmit,
   onNavigateToNode,
+  onCenterCanvas,
+  onSpawnArtifact,
 }) => {
   const [inputText, setInputText] = useState('');
+  const [panelWidthVw, setPanelWidthVw] = useState<number>(58);
+  const [isResizing, setIsResizing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const vw = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
+      const clamped = Math.min(82, Math.max(28, vw));
+      setPanelWidthVw(clamped);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      onCenterCanvas?.();
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, onCenterCanvas]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -107,8 +140,21 @@ export const FullscreenChat: React.FC<FullscreenChatProps> = ({
   };
 
   return (
-    <div className={`fullscreen-chat-overlay ${isOpen ? 'open' : 'closed'}`}>
-      <div className="fullscreen-chat-container">
+    <div
+      className={`fullscreen-chat-overlay ${isOpen ? 'open' : 'closed'} ${isResizing ? 'resizing' : ''}`}
+      style={isOpen ? { width: `${panelWidthVw}vw` } : undefined}
+    >
+      <div
+        className="fullscreen-resizer"
+        onMouseDown={handleResizeStart}
+        title="Drag to resize split view"
+      >
+        <div className="fullscreen-resizer-grip" />
+      </div>
+      <div
+        className="fullscreen-chat-container"
+        style={{ width: `${panelWidthVw}vw` }}
+      >
         <div className="chat-main-pane">
           <div className="chat-header">
             <button className="back-to-canvas-btn" onClick={onClose}>
@@ -116,9 +162,21 @@ export const FullscreenChat: React.FC<FullscreenChatProps> = ({
               <span>Back to Canvas</span>
             </button>
             <span className="chat-header-title">Active Thread</span>
-            <button className="close-fullscreen-btn" onClick={onClose}>
-              <X size={18} />
-            </button>
+            <div className="chat-header-actions">
+              {onCenterCanvas && (
+                <button
+                  className="center-canvas-header-btn"
+                  onClick={onCenterCanvas}
+                  title="Center & fit canvas on the left"
+                >
+                  <LocateFixed size={15} />
+                  <span>Fit Canvas</span>
+                </button>
+              )}
+              <button className="close-fullscreen-btn" onClick={onClose}>
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           <div className="chat-messages-scroller">
@@ -139,7 +197,14 @@ export const FullscreenChat: React.FC<FullscreenChatProps> = ({
                   </div>
                   <div className="bubble-content markdown-body">
                     {step.response ? (
-                      <MarkdownRenderer content={step.response} />
+                      <MarkdownRenderer
+                        content={step.response}
+                        onExtractArtifact={
+                          onSpawnArtifact
+                            ? (title, language, content) => onSpawnArtifact(step.nodeId, title, language, content)
+                            : undefined
+                        }
+                      />
                     ) : (
                       <span className="typing-loader">Thinking...</span>
                     )}

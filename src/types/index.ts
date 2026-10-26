@@ -22,6 +22,7 @@ export interface CosmosNodeData {
   isMergeNode?: boolean;
   status?: 'success' | 'idle' | 'error' | 'running' | 'draft';
   onBranch?: () => void;
+  onContinue?: () => void;
   onDelete?: () => void;
   onFullscreen?: () => void;
   onSubmitPrompt?: (prompt: string, isBranch: boolean) => void;
@@ -30,6 +31,19 @@ export interface CosmosNodeData {
   onResizeStop?: () => void;
   onSpawnArtifact?: (title: string, language: string, content: string) => void;
   summary?: string;
+}
+
+export interface CanvasAnnotation {
+  id: string;
+  type: 'path' | 'rect' | 'circle' | 'text';
+  color: string;
+  size: number;
+  points?: { x: number; y: number }[];
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  text?: string;
 }
 
 export interface ArtifactNodeData {

@@ -69,7 +69,119 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+.security-trust-card {
+  background: rgba(48, 209, 88, 0.08);
+  border: 1px solid rgba(48, 209, 88, 0.24);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.security-trust-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #30d158;
+}
+
+.security-shield-icon {
+  flex-shrink: 0;
+}
+
+.security-trust-text {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.settings-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.clear-key-link {
+  background: none;
+  border: none;
+  color: var(--accent-danger);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.clear-key-link:hover {
+  text-decoration: underline;
+}
+
+.demo-mode-pill {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: rgba(94, 156, 255, 0.14);
+  border: 1px solid rgba(94, 156, 255, 0.3);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.api-key-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.api-key-input {
+  padding-right: 36px !important;
+}
+
+.toggle-key-visibility {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.toggle-key-visibility:hover {
+  color: var(--text-primary);
+}
+
+.provider-presets-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-chip {
+  flex: 1;
+  background: var(--surface-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.preset-chip:hover {
+  background: rgba(94, 156, 255, 0.14);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
 }
 
 .settings-group {
